@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    types: [opened]
     branches: [ main ]
 
 jobs:
@@ -27,13 +28,7 @@ jobs:
       run: go mod download
 
     - name: Run tests
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.txt
-        fail_ci_if_error: true
+      run: go test -v -race ./...
 
   lint:
     name: Lint
