@@ -79,16 +79,15 @@ jobs:
       run: |
         if [ -z "$(git tag -l)" ]; then
           # If no tags exist, get all commits
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          git log --pretty=format:"* %s (%h)" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          NOTES=$(git log --pretty=format:"* %s (%h)")
         else
           # Get commits since last tag
           LAST_TAG=$(git describe --tags --abbrev=0)
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          git log $LAST_TAG..HEAD --pretty=format:"* %s (%h)" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          NOTES=$(git log $LAST_TAG..HEAD --pretty=format:"* %s (%h)")
         fi
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        echo "$NOTES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Create Release
       id: create_release
