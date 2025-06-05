@@ -1,0 +1,9 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+[build]
+  cmd = "go build -o redix ./main.go"
+  bin = "redix --mysql-host=mysql --mysql-user=root --mysql-pass=root --mysql-db=redix --port=:6379"
+  include_ext = ["go"]
+  exclude_dir = ["vendor", "tmp"]
+  log = "build.log"
