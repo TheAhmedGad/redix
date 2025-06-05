@@ -1,0 +1,42 @@
+services:
+  redix:
+    build: 
+      context: ./dockit/GoLang
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./dockit/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    image: phpmyadmin
+    environment:
+      - PMA_ARBITRARY=0
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=root
+      - UPLOAD_LIMIT=100M
+    ports:
+      - 8080:80
+
+  redis:
+    image: redis
+
+  test:
+    image: ubuntu
+    working_dir: /home/ubuntu/
+    volumes:
+      - ./redix:/home/ubuntu/redix
+    command: ["/bin/bash","-c", "./redix --mysql-host=mysql --mysql-user=root --mysql-pass=root --mysql-db=redix --port=:6379"]
