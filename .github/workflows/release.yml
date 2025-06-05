@@ -34,6 +34,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for release notes
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -57,6 +59,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for release notes
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
@@ -67,12 +74,29 @@ jobs:
     - name: List downloaded files
       run: ls -la binaries/
 
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        if [ -z "$(git tag -l)" ]; then
+          # If no tags exist, get all commits
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          git log --pretty=format:"* %s (%h)" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          git log $LAST_TAG..HEAD --pretty=format:"* %s (%h)" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.event.inputs.version }}
         name: Release ${{ github.event.inputs.version }}
+        body: ${{ steps.release_notes.outputs.notes }}
         draft: false
         prerelease: false
         files: |
