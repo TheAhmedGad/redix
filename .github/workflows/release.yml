@@ -46,7 +46,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.binary_name }}
+        name: binaries
         path: ${{ matrix.binary_name }}
 
   release:
@@ -57,7 +57,12 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
-        path: artifacts
+        path: binaries
+        pattern: binaries
+        merge-multiple: true
+
+    - name: List downloaded files
+      run: ls -la binaries/
 
     - name: Create Release
       id: create_release
@@ -68,8 +73,8 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          artifacts/redix-linux-amd64
-          artifacts/redix-darwin-amd64
-          artifacts/redix-windows-amd64.exe
+          binaries/redix-linux-amd64
+          binaries/redix-darwin-amd64
+          binaries/redix-windows-amd64.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
