@@ -1,0 +1,79 @@
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    main: ./main.go
+    binary: redix
+    dir: .
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - docker-compose.yml
+      - dockit/**/*
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+checksum:
+  name_template: 'checksums.txt'
+
+release:
+  github:
+    owner: yourusername
+    name: redix
+  prerelease: auto
+
+dockers:
+  - image_templates:
+      - "{{ .Env.DOCKER_USERNAME }}/redix:{{ .Version }}"
+      - "{{ .Env.DOCKER_USERNAME }}/redix:v{{ .Major }}.{{ .Minor }}"
+      - "{{ .Env.DOCKER_USERNAME }}/redix:latest"
+    goos: linux
+    goarch: amd64
+    dockerfile: dockit/GoLang/Dockerfile
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.version={{.Version}}
+      - --label=org.opencontainers.image.title=Redix
+      - --label=org.opencontainers.image.description=A Redis-like in-memory data store implementation in Go
+      - --label=org.opencontainers.image.source={{.GitURL}}
+      - --label=org.opencontainers.image.licenses=MIT 
